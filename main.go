@@ -20,11 +20,13 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
-	"github.com/prometheus-community/pro-bing"
+	probing "github.com/prometheus-community/pro-bing"
 	"github.com/superq/smokeping_prober/config"
 
 	"github.com/alecthomas/kingpin/v2"
@@ -143,6 +145,11 @@ func main() {
 	var pinger *probing.Pinger
 	var host string
 	for i, host := range *hosts {
+		parts := strings.Split(host, ":")
+		if len(parts) > 1 {
+			host = parts[1]
+		}
+
 		pinger = probing.New(host)
 
 		err := pinger.Resolve()
@@ -152,6 +159,9 @@ func main() {
 		}
 
 		level.Info(logger).Log("msg", "Pinger resolved", "host", host, "ip_addr", pinger.IPAddr())
+		if len(parts) > 1 {
+			setFieldString(pinger, "addr", parts[0])
+		}
 
 		pinger.Interval = *interval
 		pinger.RecordRtts = false
@@ -173,6 +183,11 @@ func main() {
 			os.Exit(1)
 		}
 		for _, host = range targetGroup.Hosts {
+			parts := strings.Split(host, ":")
+			if len(parts) > 1 {
+				host = parts[1]
+			}
+
 			pinger = probing.New(host)
 			pinger.Interval = targetGroup.Interval
 			pinger.RecordRtts = false
@@ -186,6 +201,9 @@ func main() {
 			if err != nil {
 				level.Error(logger).Log("msg", "failed to resolve pinger", "error", err.Error())
 				os.Exit(1)
+			}
+			if len(parts) > 1 {
+				setFieldString(pinger, "addr", parts[0])
 			}
 			pingers = append(pingers, pinger)
 		}
@@ -242,4 +260,12 @@ func main() {
 		level.Error(logger).Log("msg", "pingers failed", "error", err)
 		os.Exit(1)
 	}
+}
+
+func setFieldString(obj interface{}, name string, value string) {
+	fie := reflect.ValueOf(obj).Elem().FieldByName("addr")
+	if !fie.CanSet() {
+		fie = reflect.NewAt(fie.Type(), unsafe.Pointer(fie.UnsafeAddr())).Elem()
+	}
+	fie.SetString(value)
 }

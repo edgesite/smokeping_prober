@@ -38,6 +38,16 @@ Args:
   [<hosts>]  List of hosts to ping
 ```
 
+## Host aliases
+
+CAUTION: this feature is implemented with reflect, do not use in production.
+
+Use `alias:host` to specify a host alias, either targets or command line arguments can use host aliases. Example:
+
+```
+smokeping_prober cf_dns1:1.1.1.1 quad8:dns.google.com
+```
+
 ## Configuration
 
 The prober can take a list of targets and parameters from the command line or from a yaml config file.
@@ -47,14 +57,14 @@ Example config:
 ```yaml
 ---
 targets:
-- hosts:
-  - host1
-  - host2
-  interval: 1s # Duration, Default 1s.
-  network: ip # One of ip, ip4, ip6. Default: ip (automatic IPv4/IPv6)
-  protocol: icmp # One of icmp, udp. Default: icmp (Requires privileged operation)
-  size: 56 # Packet data size in bytes. Default 56 (Range: 24 - 65535)
-  source: 127.0.1.1 # Souce IP address to use. Default: None (automatic selection)
+  - hosts:
+      - host1
+      - host2
+    interval: 1s # Duration, Default 1s.
+    network: ip # One of ip, ip4, ip6. Default: ip (automatic IPv4/IPv6)
+    protocol: icmp # One of icmp, udp. Default: icmp (Requires privileged operation)
+    size: 56 # Packet data size in bytes. Default 56 (Range: 24 - 65535)
+    source: 127.0.1.1 # Souce IP address to use. Default: None (automatic selection)
 ```
 
 In each host group the `interval`, `network`, and `protocol` are optional.
@@ -84,14 +94,14 @@ docker run \
 
 ## Metrics
 
- Metric Name                            | Type       | Description
-----------------------------------------|------------|-------------------------------------------
- smokeping\_requests\_total             | Counter    | Counter of pings sent.
- smokeping\_response\_duration\_seconds | Histogram  | Ping response duration.
- smokeping\_response\_ttl               | Gauge      | The last response Time To Live (TTL).
- smokeping\_response\_duplicates\_total | Counter    | The number of duplicated response packets.
- smokeping\_receive\_errors\_total      | Counter    | The number of errors when Pinger attempts to receive packets.
- smokeping\_send\_errors\_total         | Counter    | The number of errors when Pinger attempts to send packets.
+| Metric Name                         | Type      | Description                                                   |
+| ----------------------------------- | --------- | ------------------------------------------------------------- |
+| smokeping_requests_total            | Counter   | Counter of pings sent.                                        |
+| smokeping_response_duration_seconds | Histogram | Ping response duration.                                       |
+| smokeping_response_ttl              | Gauge     | The last response Time To Live (TTL).                         |
+| smokeping_response_duplicates_total | Counter   | The number of duplicated response packets.                    |
+| smokeping_receive_errors_total      | Counter   | The number of errors when Pinger attempts to receive packets. |
+| smokeping_send_errors_total         | Counter   | The number of errors when Pinger attempts to send packets.    |
 
 ### TLS and basic authentication
 
